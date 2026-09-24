@@ -40,8 +40,8 @@ Bölüm başlar → KURAL kartı 2 sn ekranda → geri sayım → oynanış (30�
 | Kaybetme (can) | 3 yanlış nesne yutmak (upgrade ile 4–5) |
 | Kaybetme (süre) | Süre dolduğunda hedefe ulaşılmamış olmak |
 
-Süre dolduğunda zeminde kalan yanlış nesneler **ceza değildir**. Oyuncu istemediği
-nesneyi yutmamakla zaten ödüllendirilmiştir. *(Bkz. Açık Soru #1.)*
+Süre dolduğunda zeminde kalan yanlış nesneler **ceza değildir** ve bonus da vermez.
+Oyuncu istemediği nesneyi yutmamakla zaten ödüllendirilmiştir. **(Karar verildi.)**
 
 ### 2.2 Yıldız sistemi
 | Yıldız | Koşul |
@@ -64,6 +64,17 @@ Tüm katsayılar Inspector'dan ayarlanır (`EconomyConfig` ScriptableObject).
 
 ## 3. Delik mekaniği
 
+- **Arena:** ekrandan **büyük, kaydırmalı** bir zemin (varsayılan ~1.8× ekran alanı,
+  `LevelSpec.arenaSize` ile bölüm başına ayarlanır). Kamera deliği yumuşak
+  damping ile takip eder ve arena sınırlarına clamp'lenir → kenarda boşluk görünmez.
+  Keşif hissi ve daha fazla nesne kapasitesi sağlar.
+- **Kural her zaman ekranda:** kamera hareket ettiği için kural kartı kaybolmaz;
+  bölüm başındaki büyük kart 2 sn sonra ekranın üstündeki **kalıcı ince şeride**
+  (safe-area altına sabitlenmiş, yarı saydam) küçülerek yerleşir. Oyuncu kuralı
+  her an okuyabilir → kaydırmalı haritanın tek gerçek riski (planlama zorluğu)
+  ortadan kalkar.
+- **Yön ipucu:** ekran dışındaki nesne yoğunluğu için kenarlarda küçük ok
+  göstergeleri (Aşama 4). Minimap kullanılmaz — portrait ekranda yer kaplar.
 - **Kontrol:** tek parmak sürükleme. Parmak konumu ekran→zemin düzlemi
   raycast'i ile dünya konumuna çevrilir; delik bu hedefe `Lerp` ile yumuşak
   takip eder (ani sıçrama yok, düşük FPS'te bile akıcı).
@@ -218,8 +229,9 @@ süre %25 kısa, yanıltıcı oranı yüksek, bölüm ortasında kural değişim
 - **Stil:** temiz, modern, flat/low-poly. Primitive mesh'ler, `Unlit`/basit `Lit`
   materyaller, gölgesiz veya tek yönlü yumuşak gölge. Nesne üstünde TextMeshPro
   ile metin.
-- **Kamera:** ortografik-benzeri hafif perspektif, ~50° eğimli, portrait sabit arena
-  (kaydırma yok — düşük donanım ve okunabilirlik için).
+- **Kamera:** hafif perspektif, ~50° eğimli, portrait. Deliği `SmoothDamp` ile takip
+  eder, arena sınırlarına clamp'lenir. Nesneler ekran dışındayken güncellenmez
+  (basit culling) → maliyet sabit arenaya yakın kalır.
 - **Juice listesi:** yutma pop'u + partikül, combo sayacı zıplaması, delik büyüme
   tween'i, hatada ekran sarsıntısı + kırmızı vinyet + haptic, kural kartı
   slide-in, süre son 5 sn'de nabız atışı, kazanma ekranında yıldız pat pat.
@@ -236,10 +248,17 @@ baskısı yok, materyal sayısı düşük, batch dostu).
 
 ---
 
-## 10. Açık tasarım soruları
+## 10. Verilen kararlar (Aşama 0 onayı)
 
-1. **Süre sonunda zeminde kalan yanlış nesneler ceza olmalı mı?** (Şu anki karar: hayır.)
-2. **Yanlış yutmada can mı, yoksa sadece boyut/puan cezası mı?** (Şu anki karar: her ikisi.)
-3. **Enerji/can bekleme sistemi (hayat yenilenmesi) olacak mı?** (Şu anki karar: yok —
-   yetişkin oyuncuyu bekletmek retention'ı düşürür, bunun yerine reklam hook'ları.)
-4. **Bölüm başarısızlığında ilerleme kaybı?** (Şu anki karar: yok, sınırsız tekrar.)
+| # | Konu | Karar |
+|---|---|---|
+| 1 | Arena | **Kaydırmalı geniş harita**, kamera deliği takip eder; kural ekranın üstünde kalıcı ince şeritte hep görünür |
+| 2 | Yanlış yutma cezası | **Can (−1) + delik küçülmesi + combo sıfırlanması**; 3 yanlışta bölüm biter |
+| 3 | Enerji sistemi | **Yok** — sınırsız deneme; gelir reklam ve upgrade'lerden |
+| 4 | Süre sonu | Kalan yanlış nesneler için **ne ceza ne bonus** |
+| 5 | Başarısızlıkta ilerleme kaybı | Yok, sınırsız tekrar |
+
+## 11. Kalan açık sorular
+
+- Süre cezası (−3 sn) ileri dünyalarda ekstra zorluk parametresi olarak açılsın mı?
+  (Şu anki plan: `DifficultySettings`'te kapalı bir seçenek olarak hazır dursun.)

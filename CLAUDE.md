@@ -177,6 +177,7 @@ Yan etkisiz, allocation'sız, test edilebilir.
   "timeLimit": 40,
   "lives": 3,
   "motion": "drift",
+  "arenaSize": { "x": 9.0, "y": 16.0 },
   "holeStartRadius": 0.55,
   "isBoss": true,
   "midLevelSwitch": { "atProgress": 0.5, "ruleId": "r_even" },
@@ -207,6 +208,9 @@ LevelSpec LevelGenerator.Generate(int levelIndex, int seed, DifficultySettings d
 
 - **Yutma mekaniği fiziksiz.** Mesafe kontrolü + tween. Deterministik, ucuz,
   Unity'de çalıştırmadan doğru yazılabilir. `Rigidbody`/`Collider` kullanılmaz.
+- **Kamera:** kaydırmalı arena. `CameraRig` deliği `SmoothDamp` ile takip eder,
+  arena sınırlarına clamp'lenir. Kural HUD'da kalıcı şerit olarak durduğu için
+  kamera hareketi planlamayı bozmaz. Ekran dışı nesneler güncellenmez.
 - **State machine:** `Boot → Menu → Playing → Win/Fail → Menu`.
   `GameStateMachine` + `IGameState` (Enter/Tick/Exit). Sahne değişimi yok;
   tek `Game` sahnesi + `Boot` sahnesi, paneller açılıp kapanır (yükleme süresi 0).
@@ -251,8 +255,9 @@ LevelSpec LevelGenerator.Generate(int levelIndex, int seed, DifficultySettings d
 ## 6. Durum
 
 ### Yapılanlar
-- **Aşama 0 (devam ediyor):** `DESIGN.md` ve `CLAUDE.md` yazıldı; mimari,
-  veri formatları (nesne / kural / bölüm) ve format gerekçeleri belirlendi.
+- **Aşama 0 (tamamlandı):** `DESIGN.md` ve `CLAUDE.md` yazıldı; mimari,
+  veri formatları (nesne / kural / bölüm) ve format gerekçeleri belirlendi;
+  4 temel tasarım kararı kullanıcı onayıyla kesinleşti.
 
 ### Sıradakiler
 - **Aşama 1:** Proje iskeleti (manifest, ProjectVersion, .gitignore, README),
@@ -265,5 +270,6 @@ LevelSpec LevelGenerator.Generate(int levelIndex, int seed, DifficultySettings d
 - **Aşama 5:** Meta sistemler, menüler, ayarlar, lokalizasyon. → PR
 - **Aşama 6:** Juice, haptic, performans, `IAdService` placeholder'ları. → PR
 
-### Bekleyen kararlar
-Bkz. `DESIGN.md` §10 (açık tasarım soruları).
+### Onaylanan tasarım kararları (Aşama 0)
+Kaydırmalı arena + kalıcı kural şeridi · yanlışta can+küçülme · enerji sistemi yok ·
+süre sonu cezasız. Ayrıntı: `DESIGN.md` §10. Kalan açık konu: `DESIGN.md` §11.
