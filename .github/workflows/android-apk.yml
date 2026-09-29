@@ -1,0 +1,54 @@
+# Telefona kurulabilir bir APK üretir.
+#
+# Neden: iOS derlemesi Mac ister, Android derlemesi de Android SDK ister.
+# İkisini de kurmak yerine GitHub'ın makinesinde derleyip çıktıyı indiriyoruz.
+#
+# Kullanımı: Actions sekmesi -> "Android APK" -> Run workflow -> bitince
+# sayfanın altındaki "envanter-apk" dosyasını indir, zip'ten çıkar, telefona at.
+name: Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/optimistic-fermi-wlsbzh]
+    paths: ['envanter/**', '.github/workflows/android-apk.yml']
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: envanter
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Bağımlılıklar
+        run: flutter pub get
+
+      - name: Statik analiz
+        run: flutter analyze
+
+      - name: Testler
+        run: flutter test
+
+      # Debug APK: imzalama anahtarı gerektirmez, doğrudan kurulabilir.
+      # Play Store'a çıkarken release + kendi keystore'umuzla imzalanacak.
+      - name: APK derle
+        run: flutter build apk --debug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: envanter-apk
+          path: envanter/build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error

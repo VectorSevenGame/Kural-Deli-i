@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../data/inventory_store.dart';
 import '../../data/models/room.dart';
+import '../../services/reminder_controller.dart';
 import '../widgets/app_header.dart';
 import '../widgets/warranty_pill.dart';
 
@@ -81,6 +82,8 @@ class SettingsScreen extends StatelessWidget {
                       ],
                     ),
                   ),
+                  const SectionHeader('Hatırlatıcılar'),
+                  const _ReminderCard(),
                   const SectionHeader('Veri'),
                   Card(
                     child: Padding(
@@ -138,6 +141,25 @@ class SettingsScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  static Future<void> _toggleReminders(
+    BuildContext context,
+    bool value,
+  ) async {
+    final controller = context.read<ReminderController>();
+    final messenger = ScaffoldMessenger.of(context);
+    final ok = await controller.setEnabled(value);
+    if (!ok) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Bildirim izni verilmedi. Telefon ayarlarından izin verirsen '
+            'garanti uyarıları gelmeye başlar.',
+          ),
+        ),
+      );
+    }
   }
 
   Future<void> _addRoom(BuildContext context) async {
@@ -217,5 +239,64 @@ class SettingsScreen extends StatelessWidget {
     );
     controller.dispose();
     return result?.trim();
+  }
+}
+
+
+class _ReminderCard extends StatelessWidget {
+  const _ReminderCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final reminders = context.watch<ReminderController>();
+
+    return Card(
+      child: Column(
+        children: [
+          SwitchListTile(
+            value: reminders.enabled,
+            onChanged: (value) =>
+                SettingsScreen._toggleReminders(context, value),
+            title: const Text(
+              'Garanti hatırlatıcıları',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
+            subtitle: Text(
+              reminders.enabled
+                  ? '${reminders.scheduledCount} hatırlatıcı kurulu'
+                  : 'Garanti bitmeden önce seni uyaralım',
+              style: TextStyle(color: scheme.onSurfaceVariant),
+            ),
+          ),
+          if (reminders.enabled)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.schedule,
+                    size: 16,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Garanti bitişinden 30 gün, 7 gün önce ve bitiş günü '
+                      'sabah 10.00\'da bildirim gelir.',
+                      style: TextStyle(
+                        fontSize: 13,
+                        height: 1.45,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }

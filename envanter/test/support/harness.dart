@@ -4,6 +4,8 @@ import 'package:envanter/app.dart';
 import 'package:envanter/data/inventory_store.dart';
 import 'package:envanter/data/photo_store_memory.dart';
 import 'package:envanter/data/repositories/memory_inventory_repository.dart';
+import 'package:envanter/services/notification_service.dart';
+import 'package:envanter/services/reminder_controller.dart';
 import 'package:envanter/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -11,6 +13,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'demo_data.dart';
 
@@ -80,12 +83,24 @@ Future<InventoryStore> pumpApp(
   addTearDown(tester.view.reset);
 
   final store = await demoStore();
+
+  // Bildirimler testte gerçekten kurulmaz; kontrolcü yine de sağlanmalı
+  // çünkü ayarlar ekranı onu okuyor.
+  SharedPreferences.setMockInitialValues({});
+  final reminders = ReminderController(
+    notifications: NoopNotificationService(),
+    inventory: store,
+    preferences: await SharedPreferences.getInstance(),
+  );
+  addTearDown(reminders.dispose);
+
   await tester.pumpWidget(
-    ChangeNotifierProvider<InventoryStore>.value(
-      value: store,
-      child: home == null
-          ? const EnvanterApp()
-          : _wrap(home),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<InventoryStore>.value(value: store),
+        ChangeNotifierProvider<ReminderController>.value(value: reminders),
+      ],
+      child: home == null ? const EnvanterApp() : _wrap(home),
     ),
   );
   await tester.pumpAndSettle();

@@ -19,10 +19,13 @@ Evindeki her seyin faturasi, garantisi ve bakim tarihi tek yerde.
 - Ayarlar: oda yönetimi
 - "Warm Haven" tasarım sistemi (Stitch), Plus Jakarta Sans, açık + koyu tema
 
+- **Bildirimler**: garanti bitişinden 30 gün, 7 gün önce ve bitiş günü
+  saat 10.00'da yerel bildirim. Ayarlardan açılır, izin istenir, envanter
+  değiştikçe kendini yeniler, telefon yeniden başlatılsa da kaybolmaz.
+
 Henüz yok:
 
 - Fatura fotoğrafından yapay zekâ ile alan doldurma
-- Bildirimler (garanti bitişi, bakım zamanı)
 - PDF / CSV dışa aktarma (sigorta için)
 - Belge ve bakım kaydı arayüzü (veri katmanı hazır, ekranları yok)
 
