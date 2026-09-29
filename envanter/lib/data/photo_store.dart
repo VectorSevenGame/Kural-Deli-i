@@ -1,48 +1,22 @@
-import 'dart:io';
+import 'package:flutter/widgets.dart';
+import 'package:image_picker/image_picker.dart';
 
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
-import 'package:uuid/uuid.dart';
+import 'photo_store_io.dart'
+    if (dart.library.js_interop) 'photo_store_memory.dart' as impl;
 
-/// Fotograf ve belgeleri uygulamanin belge klasorunde saklar.
+/// Fotoğrafların nerede durduğunu soyutlar.
 ///
-/// Veritabaninda mutlak yol degil, bu klasore gore *goreli* yol tutulur:
-/// iOS her guncellemede uygulama klasorunun mutlak yolunu degistirir,
-/// mutlak yol saklarsak butun fotograflar kaybolur.
-class PhotoStore {
-  PhotoStore(this._root);
+/// Cihazda dosya sistemine yazar; test ve web önizlemesinde bellekte tutar.
+/// Bu ayrım sayesinde arayüz `dart:io`ya bağlanmaz.
+abstract interface class PhotoStore {
+  /// Seçilen dosyayı kalıcı hale getirir ve sonradan çözümlenecek anahtarı
+  /// (göreli yol) döner.
+  Future<String> save(XFile file);
 
-  final Directory _root;
+  /// Anahtardan görüntü sağlayıcı üretir. Dosya yoksa `null`.
+  ImageProvider? imageProvider(String? key);
 
-  static const String _folder = 'media';
+  Future<void> delete(String? key);
 
-  static Future<PhotoStore> create() async {
-    final base = await getApplicationDocumentsDirectory();
-    final dir = Directory(p.join(base.path, _folder));
-    if (!dir.existsSync()) {
-      await dir.create(recursive: true);
-    }
-    return PhotoStore(dir);
-  }
-
-  /// Verilen dosyayi kalici klasore kopyalar ve goreli yolunu doner.
-  Future<String> save(File source) async {
-    const uuid = Uuid();
-    final extension = p.extension(source.path).toLowerCase();
-    final name = '${uuid.v4()}${extension.isEmpty ? '.jpg' : extension}';
-    await source.copy(p.join(_root.path, name));
-    return name;
-  }
-
-  /// Goreli yoldan okunabilir dosyayi doner. Dosya yoksa `null`.
-  File? resolve(String? relativePath) {
-    if (relativePath == null || relativePath.isEmpty) return null;
-    final file = File(p.join(_root.path, relativePath));
-    return file.existsSync() ? file : null;
-  }
-
-  Future<void> delete(String? relativePath) async {
-    final file = resolve(relativePath);
-    if (file != null) await file.delete();
-  }
+  static Future<PhotoStore> create() => impl.createPhotoStore();
 }

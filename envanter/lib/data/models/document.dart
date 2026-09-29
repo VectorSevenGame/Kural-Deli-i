@@ -1,9 +1,9 @@
-/// Bir esyaya bagli belge (fatura, garanti belgesi, kilavuz).
+/// Bir eşyaya bağlı belge (fatura, garanti belgesi, kılavuz).
 enum DocumentKind {
   invoice('Fatura'),
   warranty('Garanti Belgesi'),
-  manual('Kilavuz'),
-  other('Diger');
+  manual('Kılavuz'),
+  other('Diğer');
 
   const DocumentKind(this.label);
 
@@ -29,7 +29,7 @@ class ItemDocument {
   final String itemId;
   final DocumentKind kind;
 
-  /// Uygulamanin belge klasorune gore goreli yol.
+  /// Uygulamanın belge klasörüne göre göreli yol.
   final String filePath;
   final String? title;
   final DateTime addedAt;

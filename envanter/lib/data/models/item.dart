@@ -1,17 +1,17 @@
 import '../../domain/warranty.dart';
 
-/// Esya kategorisi.
+/// Eşya kategorisi.
 ///
-/// Her kategorinin varsayilan garanti suresi vardir. Turkiye'de tuketici
-/// garantisi cogu urunde 2 yildir (6502 sayili kanun); kategoriler
-/// ayristikca bu degerler farklilasacak.
+/// Her kategorinin varsayılan garanti süresi vardır. Türkiye'de tüketici
+/// garantisi çoğu üründe 2 yıldır (6502 sayılı kanun); kategoriler
+/// ayrıştıkça bu değerler farklılaşacak.
 enum ItemCategory {
-  whiteGoods('Beyaz Esya', 24),
+  whiteGoods('Beyaz Eşya', 24),
   electronics('Elektronik', 24),
   furniture('Mobilya', 24),
-  heating('Isitma / Kombi', 24),
-  tool('Alet / Bahce', 24),
-  other('Diger', 24);
+  heating('Isıtma / Kombi', 24),
+  tool('Alet / Bahçe', 24),
+  other('Diğer', 24);
 
   const ItemCategory(this.label, this.defaultWarrantyMonths);
 
@@ -24,7 +24,7 @@ enum ItemCategory {
       );
 }
 
-/// Evdeki tek bir esya.
+/// Evdeki tek bir eşya.
 class Item {
   const Item({
     required this.id,
@@ -53,12 +53,12 @@ class Item {
   final String? serialNumber;
   final DateTime? purchaseDate;
 
-  /// Fiyat kurus cinsinden tam sayi olarak tutulur (kayan nokta hatasi olmasin).
+  /// Fiyat kuruş cinsinden tam sayı olarak tutulur (kayan nokta hatası olmasın).
   final int? priceKurus;
   final String? seller;
   final int? warrantyMonths;
 
-  /// Uygulamanin belge klasorune gore goreli yol.
+  /// Uygulamanın belge klasörüne göre göreli yol.
   final String? photoPath;
   final String? note;
   final DateTime createdAt;
@@ -110,6 +110,24 @@ class Item {
         note: note ?? this.note,
         createdAt: createdAt,
         updatedAt: updatedAt ?? DateTime.now(),
+      );
+
+  /// Odası silindiğinde çağrılır: `copyWith` null atayamadığı için ayrı.
+  Item withoutRoom() => Item(
+        id: id,
+        name: name,
+        category: category,
+        brand: brand,
+        model: model,
+        serialNumber: serialNumber,
+        purchaseDate: purchaseDate,
+        priceKurus: priceKurus,
+        seller: seller,
+        warrantyMonths: warrantyMonths,
+        photoPath: photoPath,
+        note: note,
+        createdAt: createdAt,
+        updatedAt: DateTime.now(),
       );
 
   Map<String, Object?> toMap() => {

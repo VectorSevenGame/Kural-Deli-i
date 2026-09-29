@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'theme/app_theme.dart';
-import 'ui/home/home_screen.dart';
+import 'ui/shell/app_shell.dart';
 
 class EnvanterApp extends StatelessWidget {
   const EnvanterApp({super.key});
@@ -10,7 +10,7 @@ class EnvanterApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Envanter',
+      title: 'Yuvam',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
@@ -21,7 +21,7 @@ class EnvanterApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: const HomeScreen(),
+      home: const AppShell(),
     );
   }
 }

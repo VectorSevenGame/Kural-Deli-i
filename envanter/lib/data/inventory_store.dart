@@ -1,18 +1,18 @@
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 
+import '../domain/warranty.dart';
 import 'models/item.dart';
 import 'models/room.dart';
 import 'photo_store.dart';
-import 'repositories/inventory_repository.dart';
+import 'repositories/inventory_data_source.dart';
 
-/// Uygulama genelinde paylasilan envanter durumu.
+/// Uygulama genelinde paylaşılan envanter durumu.
 class InventoryStore extends ChangeNotifier {
   InventoryStore(this._repository, this.photos);
 
-  final InventoryRepository _repository;
+  final InventoryDataSource _repository;
   final PhotoStore photos;
 
   static const _uuid = Uuid();
@@ -25,7 +25,7 @@ class InventoryStore extends ChangeNotifier {
   List<Item> get items => _items;
   bool get loading => _loading;
 
-  /// Odasi silinmis veya hic atanmamis esyalar.
+  /// Odası silinmiş veya hiç atanmamış eşyalar.
   List<Item> get unassignedItems =>
       _items.where((i) => i.roomId == null).toList();
 
@@ -82,7 +82,7 @@ class InventoryStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Odayi siler; icindeki esyalar silinmez, odasiz kalir.
+  /// Odayı siler; içindeki eşyalar silinmez, odasız kalır.
   Future<void> deleteRoom(String id) async {
     await _repository.deleteRoom(id);
     _rooms = await _repository.rooms();
@@ -93,10 +93,37 @@ class InventoryStore extends ChangeNotifier {
   Future<List<Item>> search(String query) =>
       query.trim().isEmpty ? Future.value(const []) : _repository.search(query);
 
-  /// Secilen fotografi kalici klasore kopyalar, goreli yolunu doner.
-  Future<String> savePhoto(File file) => photos.save(file);
+  /// Seçilen fotoğrafı kalıcı hale getirir, anahtarını döner.
+  Future<String> savePhoto(XFile file) => photos.save(file);
 
-  /// Garantisi yaklasan veya bitmis esyalar, en acilden baslayarak.
+
+  // --- Türetilmiş sayılar (ana ekrandaki özet kartları) ---------------------
+
+  /// Garantisi [Warranty.expiringSoonDays] içinde biten eşya sayısı.
+  int expiringSoonCount({DateTime? now}) {
+    final today = now ?? DateTime.now();
+    return _items
+        .where((i) => i.warrantyStatus(now: today) == WarrantyStatus.expiringSoon)
+        .length;
+  }
+
+  /// Verilen eşyaların fatura tutarları toplamı (kuruş). Fiyatsızlar sayılmaz.
+  int totalValueKurus(Iterable<Item> items) => items.fold(
+        0,
+        (sum, item) => sum + (item.priceKurus ?? 0),
+      );
+
+  /// Odada garantisi bitmiş veya bitmek üzere olan eşya yoksa envanter sağlıklı.
+  bool isHealthy(Iterable<Item> items, {DateTime? now}) {
+    final today = now ?? DateTime.now();
+    return !items.any((i) {
+      final status = i.warrantyStatus(now: today);
+      return status == WarrantyStatus.expired ||
+          status == WarrantyStatus.expiringSoon;
+    });
+  }
+
+  /// Garanti bilgisi olan eşyalar, bitişi en yakın olandan başlayarak.
   List<Item> warrantyWatchlist({DateTime? now}) {
     final today = now ?? DateTime.now();
     final withWarranty = _items

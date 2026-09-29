@@ -1,7 +1,7 @@
-/// Bir esyaya yapilan bakim / onarim kaydi.
+/// Bir eşyaya yapılan bakım / onarım kaydı.
 enum ServiceKind {
-  maintenance('Bakim'),
-  repair('Onarim'),
+  maintenance('Bakım'),
+  repair('Onarım'),
   inspection('Kontrol');
 
   const ServiceKind(this.label);
@@ -34,7 +34,7 @@ class ServiceRecord {
   final String? note;
   final int? costKurus;
 
-  /// Bir sonraki bakim tarihi (orn. kombi yillik bakimi).
+  /// Bir sonraki bakım tarihi (örn. kombi yıllık bakımı).
   final DateTime? nextDate;
 
   Map<String, Object?> toMap() => {

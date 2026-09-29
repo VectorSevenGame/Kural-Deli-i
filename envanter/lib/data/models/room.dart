@@ -29,11 +29,11 @@ class Room {
       );
 }
 
-/// Ilk acilista olusturulan varsayilan odalar.
+/// İlk açılışta oluşturulan varsayılan odalar.
 const List<String> defaultRoomNames = [
   'Salon',
   'Mutfak',
-  'Yatak Odasi',
+  'Yatak Odası',
   'Banyo',
   'Balkon',
   'Depo',

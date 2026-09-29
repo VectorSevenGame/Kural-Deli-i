@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../data/inventory_store.dart';
 
-/// Esya fotografi; yoksa kategori ikonu gosterir.
+/// Eşya fotoğrafı; yoksa nötr bir ikon gösterir.
 class ItemPhoto extends StatelessWidget {
   const ItemPhoto({
     super.key,
@@ -14,6 +14,8 @@ class ItemPhoto extends StatelessWidget {
   });
 
   final String? path;
+
+  /// `double.infinity` verilirse kapsayıcıyı doldurur.
   final double size;
   final double radius;
   final IconData fallbackIcon;
@@ -21,23 +23,24 @@ class ItemPhoto extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final file = context.read<InventoryStore>().photos.resolve(path);
+    final image = context.read<InventoryStore>().photos.imageProvider(path);
+    final iconSize = size.isFinite ? size * 0.42 : 48.0;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(radius),
       child: SizedBox(
         width: size,
         height: size,
-        child: file == null
+        child: image == null
             ? ColoredBox(
-                color: scheme.surfaceContainerHighest,
+                color: scheme.surfaceContainer,
                 child: Icon(
                   fallbackIcon,
                   color: scheme.onSurfaceVariant,
-                  size: size * 0.42,
+                  size: iconSize,
                 ),
               )
-            : Image.file(file, fit: BoxFit.cover),
+            : Image(image: image, fit: BoxFit.cover),
       ),
     );
   }

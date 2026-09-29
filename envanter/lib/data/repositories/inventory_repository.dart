@@ -5,9 +5,10 @@ import '../models/document.dart';
 import '../models/item.dart';
 import '../models/room.dart';
 import '../models/service_record.dart';
+import 'inventory_data_source.dart';
 
-/// Odalar, esyalar, belgeler ve bakim kayitlari icin tek veri kapisi.
-class InventoryRepository {
+/// SQLite üzerinde çalışan envanter kaynağı.
+class InventoryRepository implements InventoryDataSource {
   InventoryRepository(this._database);
 
   final AppDatabase _database;
@@ -16,22 +17,26 @@ class InventoryRepository {
 
   // --- Odalar -------------------------------------------------------------
 
+  @override
   Future<List<Room>> rooms() async {
     final rows = await _db.query('rooms', orderBy: 'sort_order ASC, name ASC');
     return rows.map(Room.fromMap).toList();
   }
 
+  @override
   Future<void> upsertRoom(Room room) => _db.insert(
         'rooms',
         room.toMap(),
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
 
+  @override
   Future<void> deleteRoom(String id) =>
       _db.delete('rooms', where: 'id = ?', whereArgs: [id]);
 
   // --- Esyalar ------------------------------------------------------------
 
+  @override
   Future<List<Item>> items({String? roomId}) async {
     final rows = await _db.query(
       'items',
@@ -42,6 +47,7 @@ class InventoryRepository {
     return rows.map(Item.fromMap).toList();
   }
 
+  @override
   Future<Item?> item(String id) async {
     final rows = await _db.query(
       'items',
@@ -52,6 +58,7 @@ class InventoryRepository {
     return rows.isEmpty ? null : Item.fromMap(rows.first);
   }
 
+  @override
   Future<List<Item>> search(String query) async {
     final q = '%${query.trim()}%';
     final rows = await _db.query(
@@ -66,6 +73,7 @@ class InventoryRepository {
     return rows.map(Item.fromMap).toList();
   }
 
+  @override
   Future<void> upsertItem(Item item) => _db.insert(
         'items',
         item.toMap(),
@@ -73,11 +81,13 @@ class InventoryRepository {
       );
 
   /// Esyayi siler. Belgeleri ve bakim kayitlari ON DELETE CASCADE ile gider.
+  @override
   Future<void> deleteItem(String id) =>
       _db.delete('items', where: 'id = ?', whereArgs: [id]);
 
   // --- Belgeler -----------------------------------------------------------
 
+  @override
   Future<List<ItemDocument>> documents(String itemId) async {
     final rows = await _db.query(
       'documents',
@@ -88,17 +98,20 @@ class InventoryRepository {
     return rows.map(ItemDocument.fromMap).toList();
   }
 
+  @override
   Future<void> addDocument(ItemDocument document) => _db.insert(
         'documents',
         document.toMap(),
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
 
+  @override
   Future<void> deleteDocument(String id) =>
       _db.delete('documents', where: 'id = ?', whereArgs: [id]);
 
   // --- Bakim kayitlari ----------------------------------------------------
 
+  @override
   Future<List<ServiceRecord>> serviceRecords(String itemId) async {
     final rows = await _db.query(
       'service_records',
@@ -109,12 +122,14 @@ class InventoryRepository {
     return rows.map(ServiceRecord.fromMap).toList();
   }
 
+  @override
   Future<void> addServiceRecord(ServiceRecord record) => _db.insert(
         'service_records',
         record.toMap(),
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
 
+  @override
   Future<void> deleteServiceRecord(String id) =>
       _db.delete('service_records', where: 'id = ?', whereArgs: [id]);
 }

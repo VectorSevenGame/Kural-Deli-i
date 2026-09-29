@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -10,14 +8,17 @@ import '../../data/models/item.dart';
 import '../../util/formatters.dart';
 import '../widgets/item_photo.dart';
 
-/// Esya ekleme / duzenleme formu.
+/// Eşya ekleme / düzenleme formu.
 ///
-/// 1. haftada alanlar elle dolduruluyor; 2. haftada fatura fotografindan
-/// AI ile otomatik doldurulup kullaniciya onaylatilacak.
+/// Şimdilik alanlar elle dolduruluyor; sonraki adımda fatura fotoğrafından
+/// yapay zekâ ile doldurulup kullanıcıya onaylatılacak.
 class ItemEditScreen extends StatefulWidget {
-  const ItemEditScreen({super.key, this.item});
+  const ItemEditScreen({super.key, this.item, this.initialRoomId});
 
   final Item? item;
+
+  /// Yeni eşya hangi odaya eklenecek (ana ekrandaki seçili oda).
+  final String? initialRoomId;
 
   @override
   State<ItemEditScreen> createState() => _ItemEditScreenState();
@@ -60,7 +61,7 @@ class _ItemEditScreenState extends State<ItemEditScreen> {
     _seller = TextEditingController(text: item?.seller ?? '');
     _note = TextEditingController(text: item?.note ?? '');
     _category = item?.category ?? ItemCategory.other;
-    _roomId = item?.roomId;
+    _roomId = item?.roomId ?? widget.initialRoomId;
     _purchaseDate = item?.purchaseDate;
     _warrantyMonths = item?.warrantyMonths ?? _category.defaultWarrantyMonths;
     _photoPath = item?.photoPath;
@@ -88,7 +89,7 @@ class _ItemEditScreenState extends State<ItemEditScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isNew ? 'Esya ekle' : 'Duzenle'),
+        title: Text(_isNew ? 'Eşya ekle' : 'Düzenle'),
         actions: [
           TextButton(
             onPressed: _saving ? null : _save,
@@ -106,9 +107,9 @@ class _ItemEditScreenState extends State<ItemEditScreen> {
             TextFormField(
               controller: _name,
               textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(labelText: 'Esya adi *'),
+              decoration: const InputDecoration(labelText: 'Eşya adı *'),
               validator: (value) => (value == null || value.trim().isEmpty)
-                  ? 'Esyaya bir ad ver'
+                  ? 'Eşyaya bir ad ver'
                   : null,
             ),
             const SizedBox(height: 12),
@@ -135,13 +136,13 @@ class _ItemEditScreenState extends State<ItemEditScreen> {
               initialValue: _roomId,
               decoration: const InputDecoration(labelText: 'Oda'),
               items: [
-                const DropdownMenuItem(value: null, child: Text('Odasiz')),
+                const DropdownMenuItem(value: null, child: Text('Odasız')),
                 for (final room in store.rooms)
                   DropdownMenuItem(value: room.id, child: Text(room.name)),
               ],
               onChanged: (value) => setState(() => _roomId = value),
             ),
-            const _SectionTitle('Kunye'),
+            const _SectionTitle('Künye'),
             TextFormField(
               controller: _brand,
               decoration: const InputDecoration(labelText: 'Marka'),
@@ -154,13 +155,13 @@ class _ItemEditScreenState extends State<ItemEditScreen> {
             const SizedBox(height: 12),
             TextFormField(
               controller: _serial,
-              decoration: const InputDecoration(labelText: 'Seri numarasi'),
+              decoration: const InputDecoration(labelText: 'Seri numarası'),
             ),
-            const _SectionTitle('Satin alma'),
+            const _SectionTitle('Satın alma'),
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.event_outlined),
-              title: const Text('Alim tarihi'),
+              title: const Text('Alım tarihi'),
               subtitle: Text(formatDate(_purchaseDate)),
               trailing: _purchaseDate == null
                   ? null
@@ -176,19 +177,19 @@ class _ItemEditScreenState extends State<ItemEditScreen> {
                   const TextInputType.numberWithOptions(decimal: true),
               decoration: const InputDecoration(
                 labelText: 'Fiyat',
-                suffixText: 'TL',
+                suffixText: '₺',
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) return null;
-                return parsePrice(value) == null ? 'Gecerli bir tutar gir' : null;
+                return parsePrice(value) == null ? 'Geçerli bir tutar gir' : null;
               },
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _seller,
               decoration: const InputDecoration(
-                labelText: 'Nereden aldin?',
-                hintText: 'Orn. Trendyol, MediaMarkt',
+                labelText: 'Nereden aldın?',
+                hintText: 'Örn. Trendyol, MediaMarkt',
               ),
             ),
             const _SectionTitle('Garanti'),
@@ -202,7 +203,7 @@ class _ItemEditScreenState extends State<ItemEditScreen> {
               maxLines: 3,
               textCapitalization: TextCapitalization.sentences,
               decoration: const InputDecoration(
-                hintText: 'Servis telefonu, filtre olcusu, boya kodu...',
+                hintText: 'Servis telefonu, filtre ölçüsü, boya kodu…',
               ),
             ),
           ],
@@ -221,7 +222,7 @@ class _ItemEditScreenState extends State<ItemEditScreen> {
           children: [
             ListTile(
               leading: const Icon(Icons.photo_camera_outlined),
-              title: const Text('Fotograf cek'),
+              title: const Text('Fotoğraf çek'),
               onTap: () async {
                 final file =
                     await picker.pickImage(source: ImageSource.camera);
@@ -232,7 +233,7 @@ class _ItemEditScreenState extends State<ItemEditScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.photo_library_outlined),
-              title: const Text('Galeriden sec'),
+              title: const Text('Galeriden seç'),
               onTap: () async {
                 final file =
                     await picker.pickImage(source: ImageSource.gallery);
@@ -247,9 +248,7 @@ class _ItemEditScreenState extends State<ItemEditScreen> {
     );
 
     if (picked == null || !mounted) return;
-    final saved = await context.read<InventoryStore>().savePhoto(
-          File(picked.path),
-        );
+    final saved = await context.read<InventoryStore>().savePhoto(picked);
     if (mounted) setState(() => _photoPath = saved);
   }
 
@@ -317,7 +316,7 @@ class _PhotoPicker extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            path == null ? 'Fotograf ekle' : 'Fotografi degistir',
+            path == null ? 'Fotoğraf ekle' : 'Fotoğrafı değiştir',
             style: TextStyle(color: Theme.of(context).colorScheme.primary),
           ),
         ],
@@ -334,10 +333,10 @@ class _WarrantyPicker extends StatelessWidget {
 
   static const List<(String, int?)> _options = [
     ('Yok', null),
-    ('1 yil', 12),
-    ('2 yil', 24),
-    ('3 yil', 36),
-    ('5 yil', 60),
+    ('1 yıl', 12),
+    ('2 yıl', 24),
+    ('3 yıl', 36),
+    ('5 yıl', 60),
   ];
 
   @override
@@ -366,7 +365,7 @@ class _SectionTitle extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(4, 28, 4, 12),
       child: Text(
-        text.toUpperCase(),
+        turkishUpper(text),
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w700,

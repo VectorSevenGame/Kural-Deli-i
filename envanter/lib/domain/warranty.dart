@@ -50,6 +50,22 @@ abstract final class Warranty {
     return _dateOnly(end).difference(_dateOnly(now)).inDays;
   }
 
+  /// Garanti suresinin ne kadarinin gectigini 0..1 arasinda doner.
+  ///
+  /// Tasarimdaki "%65 gecti" cubugu bunu kullanir.
+  static double? progress(
+    DateTime? purchaseDate,
+    int? months, {
+    required DateTime now,
+  }) {
+    final end = endDate(purchaseDate, months);
+    if (end == null) return null;
+    final total = _dateOnly(end).difference(_dateOnly(purchaseDate!)).inDays;
+    if (total <= 0) return 1;
+    final elapsed = _dateOnly(now).difference(_dateOnly(purchaseDate)).inDays;
+    return (elapsed / total).clamp(0.0, 1.0);
+  }
+
   static WarrantyStatus statusOf(
     DateTime? purchaseDate,
     int? months, {
